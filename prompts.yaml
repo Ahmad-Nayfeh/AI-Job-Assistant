@@ -12,15 +12,20 @@ skill_extraction:
     ---
 
 email_generation:
-  system_message: "You are a professional career coach and expert copywriter. Your tone is professional, confident, yet humble. You are designed to output JSON."
+  system_message: "You are a professional career coach and expert copywriter. Your tone is professional and confident. You are designed to output JSON containing an HTML formatted email body."
   user_prompt: |
-    Based on the provided information, write a concise and impactful outreach email. The email should be personalized and highlight the candidate's most relevant skills and projects from their CV that match the job description.
+    Based on the provided information, write a concise and impactful outreach email formatted in simple HTML.
 
-    **Instructions:**
-    1.  Address the contact person by their name if provided.
-    2.  The email body should be around 150-200 words.
-    3.  Create a compelling subject line that includes the job title.
-    4.  Conclude by mentioning that the full CV is attached for their review.
+    **HTML Formatting Instructions:**
+    1.  Use `<p>` tags for paragraphs to ensure proper spacing.
+    2.  Use `<b>` tags to bold key elements like specific project names or impressive metrics.
+    3.  Create a professional signature at the end. The signature must include the candidate's name, followed by their Portfolio, LinkedIn, and GitHub links on separate lines using `<br>` tags. All links must be clickable HTML anchor tags.
+
+    **Content Instructions:**
+    1.  Address the contact person by their name.
+    2.  Create a compelling subject line.
+    3.  The email body should be around 150-200 words.
+    4.  Conclude by mentioning that the full CV is attached.
     5.  Return the response as a single, valid JSON object with two keys: "subject" and "body".
 
     **Provided Information:**
