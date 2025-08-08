@@ -1,0 +1,22 @@
+# Virtual Environment
+/venv
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# IDE configuration
+.vscode/
+.idea/
+
+# Data and Log files
+/data/
+/logs/
+
+# Configuration file with secrets
+config.ini
+
+# OS-specific files
+.DS_Store
+Thumbs.db
