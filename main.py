@@ -1,111 +1,122 @@
-from modules import config_handler, excel_handler, ai_handler, file_handler
+from modules import config_handler, excel_handler, ai_handler, file_handler, email_handler
 import sys
 import json
+from datetime import datetime
 
 def main():
+    """
+    الدالة الرئيسية لتشغيل مساعد البحث عن عمل.
+    """
     print("--- Starting AI Job Assistant ---")
-
-    # الخطوة 1: قراءة الإعدادات والأوامر والسيرة الذاتية
+    
+    # --- 1. الإعداد الأولي ---
     try:
         config = config_handler.load_config()
         prompts = ai_handler.load_prompts()
-        
-        excel_path = config['PATHS']['EXCEL_FILE_PATH']
-        master_cv_path = config['PATHS']['MASTER_CV_PATH']
-        openai_api_key = config['API_KEYS']['OPENAI_API_KEY']
-        
-        cv_content = file_handler.read_text_file(master_cv_path)
+        cv_content = file_handler.read_text_file(config['PATHS']['MASTER_CV_PATH'])
+        jobs_df = excel_handler.read_excel_file(config['PATHS']['EXCEL_FILE_PATH'])
     except Exception as e:
-        print(f"Fatal Error: Could not complete initial setup. {e}", file=sys.stderr)
+        print(f"Fatal Error during setup: {e}", file=sys.stderr)
         sys.exit(1)
-        
+
+    # التحقق من مفتاح الـ API
+    openai_api_key = config['API_KEYS']['OPENAI_API_KEY']
     if 'YOUR_OPENAI_API_KEY_HERE' in openai_api_key or not openai_api_key:
         print("Fatal Error: Please set your OpenAI API key in 'config.ini'.", file=sys.stderr)
         sys.exit(1)
-
-    # الخطوة 2: قراءة ملف الإكسل
-    try:
-        jobs_df = excel_handler.read_excel_file(excel_path)
-    except Exception as e:
-        print(f"Fatal Error: Could not read the Excel file. {e}", file=sys.stderr)
-        sys.exit(1)
-
-    # الخطوة 3: فلترة الصفوف
-    pending_jobs_df = jobs_df[jobs_df['Status'].str.lower() == 'pending'].copy()
-    if pending_jobs_df.empty:
-        print("\nNo jobs with 'Pending' status found. Exiting.")
-        sys.exit(0)
-    print(f"\nFound {len(pending_jobs_df)} job(s) with 'Pending' status. Starting process...\n")
-
-    # --- بداية منطق المعالجة ---
-    for index, row in pending_jobs_df.iterrows():
-        print(f"--- Processing Job: {row['Job Title']} at {row['Company']} ---")
         
-        # استخراج المهارات (كما كان في السابق)
-        job_description = row['Job Description']
-        if not isinstance(job_description, str) or not job_description.strip():
-            print("  > Skipping due to empty Job Description.")
-            continue
+    # متغير لتتبع ما إذا كانت هناك تغييرات لحفظها
+    changes_made = False
+    
+    # --- 2. الحلقة الرئيسية لمعالجة كل صف في الجدول ---
+    for index, row in jobs_df.iterrows():
+        status = str(row.get('Status', '')).strip().lower()
+
+        # --- معالجة الوظائف المعلقة (Pending) ---
+        if status == 'pending':
+            print(f"\n--- Found 'Pending' Job: {row['Job Title']} at {row['Company']} ---")
+            changes_made = True # سيتم إجراء تغييرات
             
-        extracted_skills = ai_handler.extract_skills_from_description(openai_api_key, job_description, prompts)
-        if not extracted_skills:
-            print("  > Could not extract skills. Skipping email generation for this job.")
-            continue
+            # أ. استخراج المهارات
+            job_description = row.get('Job Description', '')
+            extracted_skills = ai_handler.extract_skills_from_description(openai_api_key, job_description, prompts)
+            if not extracted_skills:
+                print("  > Could not extract skills. Skipping this job.")
+                continue
+
+            tech_skills_str = ", ".join(extracted_skills.get('technical_skills', []))
+            soft_skills_str = ", ".join(extracted_skills.get('soft_skills', []))
+            jobs_df.loc[index, 'Technical Skills'] = tech_skills_str
+            jobs_df.loc[index, 'Soft Skills'] = soft_skills_str
+            print("  > Skills extracted successfully.")
+
+            # ب. إنشاء البريد الإلكتروني
+            contact_persons = [p.strip() for p in str(row.get('Contact Person', '')).split(',') if p.strip()]
+            if not contact_persons:
+                print("  > No contact person found. Skipping email generation.")
+                continue
+
+            email_list = []
+            for person in contact_persons:
+                details = {"contact_person": person, "job_title": row['Job Title'], "company_name": row['Company'], "job_description": job_description[:1500], "technical_skills": tech_skills_str, "cv_content": cv_content}
+                email_content = ai_handler.generate_email(openai_api_key, details, prompts)
+                if email_content:
+                    email_list.append(email_content)
+            
+            jobs_df.loc[index, 'Cover Letter/Message'] = json.dumps(email_list, indent=2, ensure_ascii=False)
+            print(f"  > Generated {len(email_list)} email(s).")
+            
+            # ج. تحديث الحالة بناءً على وضع التشغيل
+            automation_mode = config['SETTINGS']['AUTOMATION_MODE'].upper()
+            if automation_mode == 'REVIEW':
+                jobs_df.loc[index, 'Status'] = 'Ready to Send'
+                print("  > Status changed to 'Ready to Send'.")
+            elif automation_mode == 'FULL':
+                jobs_df.loc[index, 'Status'] = 'Approved'
+                print("  > Status changed to 'Approved' for immediate sending.")
         
-        tech_skills_str = ", ".join(extracted_skills.get('technical_skills', []))
-        soft_skills_str = ", ".join(extracted_skills.get('soft_skills', []))
-        jobs_df.loc[index, 'Technical Skills'] = tech_skills_str
-        jobs_df.loc[index, 'Soft Skills'] = soft_skills_str
-        print(f"  > Skills extracted successfully.")
+        # --- معالجة الوظائف المعتمدة (Approved) ---
+        # سيتم تشغيل هذا الجزء في نفس الدورة إذا كان الوضع FULL، أو في دورة لاحقة إذا كان REVIEW
+        if jobs_df.loc[index, 'Status'].strip().lower() == 'approved':
+            print(f"\n--- Found 'Approved' Job: {row['Job Title']} at {row['Company']} ---")
+            changes_made = True # سيتم إجراء تغييرات
             
-        # --- بداية المنطق الجديد للتعامل مع عدة أشخاص ---
-        contact_persons = [p.strip() for p in str(row.get('Contact Person', '')).split(',') if p.strip()]
-        contact_emails = [e.strip() for e in str(row.get('Contact Email', '')).split(',') if e.strip()]
+            # الحصول على خدمة Gmail (سيطلب المصادقة في المرة الأولى)
+            gmail_service = email_handler.get_gmail_service()
+            if not gmail_service:
+                print("  > Could not get Gmail service. Aborting email sending.")
+                continue
 
-        if not contact_persons or not contact_emails:
-            print("  > No contact person or email found. Skipping email generation.")
-            continue
+            # إرسال الإيميلات
+            contact_emails = [e.strip() for e in str(row.get('Contact Email', '')).split(',') if e.strip()]
+            cover_letters = json.loads(row['Cover Letter/Message'])
+            
+            sent_at_least_one = False
+            for i, email_address in enumerate(contact_emails):
+                email_content = cover_letters[i]
+                message = email_handler.create_message_with_attachment(config['SETTINGS']['USER_EMAIL'], email_address, email_content['subject'], email_content['body'], config['PATHS']['PDF_CV_PATH'])
+                if message and email_handler.send_message(gmail_service, 'me', message):
+                    sent_at_least_one = True
 
-        if len(contact_persons) != len(contact_emails):
-            print(f"  > Warning: Mismatch between number of contact persons ({len(contact_persons)}) and emails ({len(contact_emails)}). Skipping email generation for this row.")
-            continue
-            
-        generated_emails_list = []
-        for i, person_name in enumerate(contact_persons):
-            person_email = contact_emails[i]
-            print(f"  > Generating email for: {person_name} ({person_email})")
-            
-            job_details_for_prompt = {
-                "contact_person": person_name,
-                "job_title": row['Job Title'],
-                "company_name": row['Company'],
-                "job_description": job_description[:1500],
-                "technical_skills": tech_skills_str,
-                "cv_content": cv_content
-            }
-            
-            generated_email = ai_handler.generate_email(openai_api_key, job_details_for_prompt, prompts)
-            if generated_email:
-                generated_emails_list.append(generated_email)
+            if sent_at_least_one:
+                jobs_df.loc[index, 'Status'] = 'Applied'
+                jobs_df.loc[index, 'Application Date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print("  > Status changed to 'Applied'.")
             else:
-                print(f"    > Failed to generate email for {person_name}.")
+                jobs_df.loc[index, 'Status'] = 'Failed'
+                print("  > Status changed to 'Failed'.")
 
-        if generated_emails_list:
-            # نحفظ قائمة الرسائل بالكامل كنص JSON واحد في الخلية
-            jobs_df.loc[index, 'Cover Letter/Message'] = json.dumps(generated_emails_list, indent=2, ensure_ascii=False)
-            print(f"  > Successfully generated {len(generated_emails_list)} email(s) for {row['Company']}.")
-        
-        print("-" * 50)
-
-    # الخطوة 4: حفظ التغييرات
-    print("\nProcess finished. Saving all changes back to the Excel file...")
-    try:
-        excel_handler.write_excel_file(jobs_df, excel_path)
-    except Exception as e:
-        print(f"Fatal Error: Could not save the Excel file. {e}", file=sys.stderr)
+    # --- 3. حفظ التغييرات ---
+    if changes_made:
+        print("\nSaving all changes back to the Excel file...")
+        try:
+            excel_handler.write_excel_file(jobs_df, config['PATHS']['EXCEL_FILE_PATH'])
+        except Exception as e:
+            print(f"Fatal Error: Could not save the Excel file. {e}", file=sys.stderr)
+    else:
+        print("\nNo jobs found with 'Pending' or 'Approved' status. No changes made.")
 
     print("\n--- AI Job Assistant finished its run. ---")
 
 if __name__ == "__main__":
     main()
-
