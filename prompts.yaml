@@ -19,7 +19,7 @@ email_generation:
     **HTML Formatting Instructions:**
     1.  Use `<p>` tags for paragraphs to ensure proper spacing.
     2.  Use `<b>` tags to bold key elements like specific project names or impressive metrics.
-    3.  Create a professional signature at the end. The signature must include the candidate's name, followed by their Portfolio, LinkedIn, and GitHub links on separate lines using `<br>` tags. All links must be clickable HTML anchor tags.
+    3.  Create a professional signature at the end. The signature must include the candidate's name, followed by their Phone Number, Portfolio, LinkedIn, and GitHub links on separate lines using `<br>` tags. All links must be clickable HTML anchor tags.
 
     **Content Instructions:**
     1.  Address the contact person by their name.
