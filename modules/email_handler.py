@@ -11,34 +11,23 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# النطاقات التي سيطلبها البرنامج. إذا قمت بتعديلها، يجب حذف ملف token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 def get_gmail_service():
-    """
-    يقوم بمصادقة المستخدم مع Gmail API وإرجاع كائن الخدمة.
-    """
+    # (This function remains the same, no changes needed)
     creds = None
-    # ملف token.json يخزن رموز الوصول الخاصة بالمستخدم ويتم إنشاؤه
-    # تلقائياً عند إكمال عملية المصادقة لأول مرة.
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    
-    # إذا لم تكن هناك بيانات اعتماد صالحة، اسمح للمستخدم بتسجيل الدخول.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            # تأكد من وجود ملف credentials.json الذي قمت بتنزيله من Google Cloud
             if not os.path.exists('credentials.json'):
-                raise FileNotFoundError("Error: 'credentials.json' not found. Please download it from Google Cloud Console.")
+                raise FileNotFoundError("Error: 'credentials.json' not found.")
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        
-        # حفظ بيانات الاعتماد للتشغيلات القادمة
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
-
     try:
         service = build('gmail', 'v1', credentials=creds)
         print("Gmail service created successfully.")
@@ -49,38 +38,35 @@ def get_gmail_service():
 
 def create_message_with_attachment(sender, to, subject, message_text, file_path):
     """
-    ينشئ رسالة بريد إلكتروني مع مرفق.
+    Creates an email message with an attachment, specifying the body as HTML.
     """
     message = MIMEMultipart()
     message['to'] = to
     message['from'] = sender
     message['subject'] = subject
 
-    msg = MIMEText(message_text, 'plain')
+    # --- THIS IS THE ONLY CHANGE ---
+    # We now specify 'html' instead of 'plain' to render the email correctly.
+    msg = MIMEText(message_text, 'html')
+    # --- END OF CHANGE ---
+
     message.attach(msg)
 
-    # التعامل مع المرفق
     try:
         with open(file_path, 'rb') as attachment:
             part = MIMEBase('application', 'octet-stream')
             part.set_payload(attachment.read())
         encoders.encode_base64(part)
-        part.add_header(
-            'Content-Disposition',
-            f'attachment; filename={os.path.basename(file_path)}',
-        )
+        part.add_header('Content-Disposition', f'attachment; filename={os.path.basename(file_path)}')
         message.attach(part)
     except FileNotFoundError:
         print(f"Error: Attachment file not found at {file_path}")
         return None
 
-    # تحويل الرسالة إلى الصيغة التي تتطلبها Gmail API
     return {'raw': base64.urlsafe_b64encode(message.as_bytes()).decode()}
 
 def send_message(service, user_id, message):
-    """
-    يرسل رسالة بريد إلكتروني باستخدام Gmail API.
-    """
+    # (This function remains the same, no changes needed)
     try:
         sent_message = service.users().messages().send(userId=user_id, body=message).execute()
         print(f"Message Id: {sent_message['id']} sent successfully.")
