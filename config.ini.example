@@ -1,0 +1,32 @@
+[PATHS]
+# Path to the Excel file for tracking jobs
+# مسار ملف الإكسل لتتبع الوظائف
+EXCEL_FILE_PATH = data/SeekingJobs.xlsx
+
+# Path to the Master CV (.md file) for AI analysis
+# مسار السيرة الذاتية التي سيقرأها الذكاء الاصطناعي
+MASTER_CV_PATH = path/to/your/Master_CV.md
+
+# Path to the PDF CV to be sent as an attachment
+# مسار السيرة الذاتية التي سيتم إرفاقها في الإيميل
+PDF_CV_PATH = path/to/your/CV.pdf
+
+[API_KEYS]
+# Your secret API key from OpenAI
+# مفتاح الـ API السري الخاص بك من OpenAI
+OPENAI_API_KEY = YOUR_OPENAI_API_KEY_HERE
+
+[SETTINGS]
+# Default mode: REVIEW or FULL. The script will ask for your choice on each run.
+# الوضع الافتراضي: REVIEW للمراجعة أو FULL للأتمتة الكاملة. سيطلب منك البرنامج الاختيار عند كل تشغيل
+AUTOMATION_MODE = REVIEW
+
+[USER_DETAILS]
+# --- Fill in your personal details here ---
+# --- املأ معلوماتك الشخصية هنا ---
+FULL_NAME = Your Full Name
+EMAIL = your.email@example.com
+PHONE_NUMBER = +1234567890
+PORTFOLIO_URL = https://your-portfolio.com
+LINKEDIN_URL = https://linkedin.com/in/your-profile
+GITHUB_URL = https://github.com/your-username
