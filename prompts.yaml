@@ -1,0 +1,36 @@
+skill_extraction:
+  system_message: "You are a helpful assistant designed to output JSON."
+  user_prompt: |
+    As an expert tech recruiter, analyze the following job description.
+    Extract the key technical skills and soft skills.
+    Return your response as a single, valid JSON object with two keys: "technical_skills" and "soft_skills".
+    Each key should contain a list of strings. Do not add any explanation, commentary, or introductory text.
+
+    Job Description:
+    ---
+    {job_description}
+    ---
+
+# --- الإضافة الجديدة ---
+email_generation:
+  system_message: "You are a professional career coach and expert copywriter. Your tone is professional, confident, yet humble. You are designed to output JSON."
+  user_prompt: |
+    Based on the provided information, write a concise and impactful outreach email. The email should be personalized and highlight the candidate's most relevant skills and projects from their CV that match the job description.
+
+    **Instructions:**
+    1.  Address the contact person by their name if provided.
+    2.  The email body should be around 150-200 words.
+    3.  Create a compelling subject line that includes the job title.
+    4.  Conclude by mentioning that the full CV is attached for their review.
+    5.  Return the response as a single, valid JSON object with two keys: "subject" and "body".
+
+    **Provided Information:**
+    ---
+    **Contact Person:** {contact_person}
+    **Job Title:** {job_title}
+    **Company Name:** {company_name}
+    **Job Description Snippet:** {job_description}
+    **Key Technical Skills for the Role:** {technical_skills}
+    **Candidate's Full CV:**
+    {cv_content}
+    ---
