@@ -4,7 +4,7 @@ skill_extraction:
     As an expert tech recruiter, analyze the following job description.
     Extract the key technical skills and soft skills.
     Return your response as a single, valid JSON object with two keys: "technical_skills" and "soft_skills".
-    Each key should contain a list of strings. Do not add any explanation, commentary, or introductory text.
+    Do not add any explanation or commentary.
 
     Job Description:
     ---
@@ -14,27 +14,26 @@ skill_extraction:
 email_generation:
   system_message: "You are a professional career coach and expert copywriter. Your tone is professional and confident. You are designed to output JSON containing an HTML formatted email body."
   user_prompt: |
-    Based on the provided information, write a concise and impactful outreach email formatted in simple HTML.
+    Based on all the provided information, write a concise and impactful outreach email formatted in simple HTML.
 
-    **HTML Formatting Instructions:**
-    1.  Use `<p>` tags for paragraphs to ensure proper spacing.
-    2.  Use `<b>` tags to bold key elements like specific project names or impressive metrics.
-    3.  Create a professional signature at the end. The signature must include the candidate's name, followed by their Phone Number, Portfolio, LinkedIn, and GitHub links on separate lines using `<br>` tags. All links must be clickable HTML anchor tags.
-
-    **Content Instructions:**
-    1.  Address the contact person by their name.
-    2.  Create a compelling subject line.
-    3.  The email body should be around 150-200 words.
-    4.  Conclude by mentioning that the full CV is attached.
-    5.  Return the response as a single, valid JSON object with two keys: "subject" and "body".
+    **Crucial Instructions:**
+    1.  **Opening:** Start by mentioning where you saw the job posting (the `Platform`).
+    2.  **Company Connection:** Show genuine interest by referencing something from the `Company Description`.
+    3.  **Create a "Bridge":** Directly connect a specific skill or project from the candidate's CV to the required skills.
+    4.  **Closing:** Conclude the email by explicitly stating that the CV is attached for their review. For example: "My full CV is attached for your detailed review, and I look forward to discussing my qualifications further."
+    5.  **HTML Formatting:** Use `<p>` for paragraphs and `<b>` to bold key elements.
+    6.  **Signature:** Do not add any signature. Just provide the main body text.
+    7.  **Return Format:** Return a single, valid JSON object with "subject" and "body" keys.
 
     **Provided Information:**
     ---
     **Contact Person:** {contact_person}
     **Job Title:** {job_title}
     **Company Name:** {company_name}
-    **Job Description Snippet:** {job_description}
+    **Platform:** {platform}
+    **Company Description:** {company_description}
     **Key Technical Skills for the Role:** {technical_skills}
+    **Key Soft Skills for the Role:** {soft_skills}
     **Candidate's Full CV:**
     {cv_content}
     ---
