@@ -17,13 +17,14 @@ email_generation:
     Based on all the provided information, write a concise and impactful outreach email formatted in simple HTML.
 
     **Crucial Instructions:**
-    1.  **Opening:** Start by mentioning where you saw the job posting (the `Platform`).
-    2.  **Company Connection:** Show genuine interest by referencing something from the `Company Description`.
-    3.  **Create a "Bridge":** Directly connect a specific skill or project from the candidate's CV to the required skills.
-    4.  **Closing:** Conclude the email by explicitly stating that the CV is attached for their review. For example: "My full CV is attached for your detailed review, and I look forward to discussing my qualifications further."
-    5.  **HTML Formatting:** Use `<p>` for paragraphs and `<b>` to bold key elements.
-    6.  **Signature:** Do not add any signature. Just provide the main body text.
-    7.  **Return Format:** Return a single, valid JSON object with "subject" and "body" keys.
+    1.  **Strict Adherence to CV:** Do NOT invent, infer, or exaggerate any skills or experiences. Only use information explicitly mentioned in the candidate's CV. If a job requires a skill the CV doesn't have, focus on transferable skills that *are* in the CV.
+    2.  **Opening:** Start by mentioning where you saw the job posting (the `Platform`).
+    3.  **Company Connection:** Show genuine interest by referencing something from the `Company Description`.
+    4.  **Create a "Bridge":** Directly connect a specific project or skill found in the candidate's CV to the requirements in the job description.
+    5.  **Closing:** Conclude the email by explicitly stating that the CV is attached.
+    6.  **HTML Formatting:** Use `<p>` for paragraphs and `<b>` to bold key elements.
+    7.  **Signature:** Do not add any signature. Just provide the main body text.
+    8.  **Return Format:** Return a single, valid JSON object with "subject" and "body" keys.
 
     **Provided Information:**
     ---
