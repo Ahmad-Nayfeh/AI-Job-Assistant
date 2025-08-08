@@ -20,3 +20,7 @@ config.ini
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Secret files from Google Cloud
+credentials.json
+token.json
