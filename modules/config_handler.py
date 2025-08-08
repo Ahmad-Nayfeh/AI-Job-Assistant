@@ -15,12 +15,15 @@ def load_config(config_path='config.ini'):
         FileNotFoundError: إذا لم يتم العثور على ملف الإعدادات.
     """
     if not os.path.exists(config_path):
-        # إيقاف البرنامج مع رسالة خطأ واضحة إذا لم يتم العثور على الملف
         raise FileNotFoundError(f"Error: Configuration file not found at '{config_path}'")
     
     config = configparser.ConfigParser()
-    config.read(config_path)
     
-    # يمكننا إضافة المزيد من عمليات التحقق هنا لاحقاً
+    # --- هذا هو السطر الذي تم تعديله ---
+    # لقد أضفنا ترميز UTF-8 بشكل صريح لضمان قراءة صحيحة على ويندوز
+    config.read(config_path, encoding='utf-8')
+    # --- نهاية التعديل ---
+    
     print("Configuration file 'config.ini' loaded successfully.")
     return config
+
